@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Lint + Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installa i moduli di sviluppo
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -MinimumVersion 5.5 -Force -Scope CurrentUser -SkipPublisherCheck
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Analisi statica
+        shell: pwsh
+        run: |
+          $settings = Join-Path $PWD 'PSScriptAnalyzerSettings.psd1'
+          $results = Invoke-ScriptAnalyzer -Path $PWD -Recurse -Settings $settings
+          if ($results) {
+              $results | Format-Table -AutoSize -Wrap | Out-String -Width 200 | Write-Host
+              throw "PSScriptAnalyzer ha segnalato $($results.Count) problema/i."
+          }
+          Write-Host 'Nessun problema rilevato.'
+
+      - name: Test Pester
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path = './tests'
+          $config.Run.PassThru = $true
+          $config.Run.Exit = $false
+          $config.Output.Verbosity = 'Detailed'
+          $result = Invoke-Pester -Configuration $config
+          if ($result.FailedCount -gt 0) {
+              throw "$($result.FailedCount) test falliti."
+          }

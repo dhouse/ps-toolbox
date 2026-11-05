@@ -1,0 +1,24 @@
+# Output di build e file temporanei
+*.zip
+*.nupkg
+*.log
+*.tmp
+out/
+dist/
+
+# Cartelle di tooling
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.psscriptanalyzer/
+
+# Test e coverage
+TestResults/
+coverage.xml
+*.Tests.ps1.bak
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
