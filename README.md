@@ -61,6 +61,7 @@ sysinfo
 | `Update-Toolbox` | `upds` | Aggiorna il modulo dall'ultima versione su GitHub |
 | `Get-ComputerModel` | `pcmodel` | Produttore, modello e seriale del PC |
 | `Export-DriverPackage` | `drvbackup` | Esporta i driver del PC in una cartella |
+| `Show-ToolboxGui` | `toolbox` | Finestra grafica: tutti i comandi da cliccare |
 
 
 Esempi:
@@ -92,6 +93,35 @@ upds
 
 > `Invoke-ScriptLint` richiede il modulo PSScriptAnalyzer:
 > `Install-Module PSScriptAnalyzer -Scope CurrentUser`.
+
+---
+
+## Finestra grafica: `toolbox`
+
+Se non hai voglia di ricordare i nomi dei comandi, apri la finestra e clicca:
+
+```powershell
+toolbox
+```
+
+Si apre una finestra con un pulsante per ogni comando: info sistema, hash di un
+file, test porta TCP, nuovo script, lint di una cartella, modello del PC,
+esporta driver e aggiorna modulo. L'output compare nel riquadro in basso, con i
+pulsanti **Copia output**, **Pulisci**, **Cartella del modulo** e **Chiudi**.
+
+- **Esporta driver** chiede cartella, nome e se creare lo zip; se la finestra non
+  e' elevata propone di riaprirsi come amministratore (UAC).
+- I comandi girano in un runspace separato: la finestra resta reattiva anche
+  mentre esporta i driver.
+- Funziona solo su Windows (WinForms); su Linux e macOS `toolbox` restituisce un
+  errore chiaro e gli altri comandi continuano a funzionare.
+
+Per averla a portata di doppio clic, crea un collegamento sul desktop con
+destinazione:
+
+```
+powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "toolbox"
+```
 
 ---
 
@@ -179,6 +209,7 @@ ps-toolbox/
 ├─ Toolbox/
 │  ├─ Toolbox.psd1          # manifest del modulo (export, versione, metadati)
 │  ├─ Toolbox.psm1          # loader: dot-source di Public e Private
+│  ├─ ToolboxGui.ps1        # finestra grafica (WinForms) usata da toolbox
 │  ├─ Private/              # funzioni interne (non esportate)
 │  └─ Public/               # un file per ogni comando esportato
 ├─ scripts/                     # script pronti all'uso e di manutenzione
@@ -237,7 +268,7 @@ fai tu su GitHub, lo script non legge ne' salva nessuna credenziale. Con
 qui, l'auto-aggiornamento funziona senza altre modifiche.
 
 Suggerimenti: aggiungi i *topics* `powershell`, `powershell-module`, `cli` al
-repo, e crea una *release* con tag `v1.1.0` per versionare.
+repo, e crea una *release* con tag `v1.2.0` per versionare.
 
 ---
 

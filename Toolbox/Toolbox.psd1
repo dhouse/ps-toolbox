@@ -1,6 +1,6 @@
 @{
     RootModule            = 'Toolbox.psm1'
-    ModuleVersion         = '1.1.0'
+    ModuleVersion         = '1.2.0'
     GUID                  = 'a4f1c9d2-6e3b-4c58-9a71-0d5b8f2c4e19'
     Author                = 'Diego Bre'
     CompanyName           = 'Community'
@@ -18,18 +18,19 @@
         'Update-Toolbox'
         'Get-ComputerModel'
         'Export-DriverPackage'
+        'Show-ToolboxGui'
     )
 
     CmdletsToExport   = @()
     VariablesToExport = @()
-    AliasesToExport   = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds', 'pcmodel', 'drvbackup')
+    AliasesToExport   = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds', 'pcmodel', 'drvbackup', 'toolbox')
 
     PrivateData = @{
         PSData = @{
             Tags         = @('toolbox', 'utility', 'cli', 'windows', 'linux', 'macos')
             ProjectUri   = 'https://github.com/dhouse/ps-toolbox'
             LicenseUri   = 'https://github.com/dhouse/ps-toolbox/blob/main/LICENSE'
-            ReleaseNotes = 'Prima release pubblica.'
+            ReleaseNotes = 'Aggiunge la finestra grafica toolbox con i comandi da cliccare.'
         }
     }
 }

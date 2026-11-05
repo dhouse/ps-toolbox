@@ -4,6 +4,22 @@ Tutte le modifiche importanti di questo progetto sono annotate in questo file.
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il
 progetto usa [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.2.0] - 2026-11-05
+
+### Aggiunto
+- `Show-ToolboxGui` (`toolbox`): finestra grafica con un pulsante per ogni
+  comando del modulo e riquadro di output integrato.
+- `Toolbox/ToolboxGui.ps1`: interfaccia WinForms con tema scuro; i comandi
+  girano in un runspace separato, quindi la finestra resta reattiva anche
+  durante l'esportazione dei driver.
+- Riavvio automatico in sessione STA se la finestra viene lanciata da un host
+  MTA, e proposta di elevazione a amministratore per `drvbackup`.
+- Test: la finestra viene costruita con `-NoShow` e verificata nei test Pester;
+  `-SelfTest` esegue due comandi e chiude da sola.
+
+### Modificato
+- `ModuleVersion` portata a `1.2.0`.
+
 ## [1.1.0] - 2026-11-05
 
 ### Aggiunto

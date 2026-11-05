@@ -28,6 +28,7 @@ Describe 'Toolbox: manifest e superficie pubblica' {
             'Update-Toolbox'
             'Get-ComputerModel'
             'Export-DriverPackage'
+            'Show-ToolboxGui'
         )
 
         foreach ($functionName in $expectedFunctions) {
@@ -36,7 +37,7 @@ Describe 'Toolbox: manifest e superficie pubblica' {
     }
 
     It 'esporta gli alias brevi' {
-        $expectedAliases = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds', 'pcmodel', 'drvbackup')
+        $expectedAliases = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds', 'pcmodel', 'drvbackup', 'toolbox')
 
         foreach ($aliasName in $expectedAliases) {
             Get-Alias -Name $aliasName -ErrorAction Stop | Should -Not -BeNullOrEmpty
@@ -207,6 +208,32 @@ Describe 'Export-DriverPackage' {
 
     It 'funziona solo su Windows' -Skip:$script:onWindows {
         { Export-DriverPackage -DestinationPath $TestDrive -Name 'PC-Test' -WhatIf } | Should -Throw
+    }
+}
+
+Describe 'Show-ToolboxGui' {
+    It 'funziona solo su Windows' -Skip:$script:onWindows {
+        { Show-ToolboxGui -NoShow } | Should -Throw
+    }
+
+    It 'costruisce la finestra con un pulsante per ogni comando' -Skip:(-not $script:onWindows) {
+        $guiForm = Show-ToolboxGui -NoShow
+
+        try {
+            $guiForm.Text | Should -Be 'Toolbox - comandi rapidi'
+
+            $buttonPanel = $guiForm.Controls | Where-Object { $_.GetType().Name -eq 'Panel' }
+            $buttons = @($buttonPanel.Controls | Where-Object { $_.GetType().Name -eq 'Button' })
+            $buttons.Count | Should -Be 8
+
+            $buttonTexts = $buttons | ForEach-Object { $_.Text }
+            $buttonTexts | Should -Contain 'Info sistema'
+            $buttonTexts | Should -Contain 'Esporta driver'
+            $buttonTexts | Should -Contain 'Aggiorna modulo'
+        }
+        finally {
+            $guiForm.Dispose()
+        }
     }
 }
 
