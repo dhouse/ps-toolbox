@@ -59,6 +59,9 @@ sysinfo
 | `New-ScriptScaffold` | `newps` | Crea un nuovo script gia' pronto per il lint |
 | `Invoke-ScriptLint` | `lint` | Analisi statica con PSScriptAnalyzer |
 | `Update-Toolbox` | `upds` | Aggiorna il modulo dall'ultima versione su GitHub |
+| `Get-ComputerModel` | `pcmodel` | Produttore, modello e seriale del PC |
+| `Export-DriverPackage` | `drvbackup` | Esporta i driver del PC in una cartella |
+
 
 Esempi:
 
@@ -92,6 +95,66 @@ upds
 
 ---
 
+## Backup dei driver di un PC
+
+`Export-DriverPackage` legge produttore e modello dal BIOS (es.
+`HP EliteBook 840 G8`), crea la cartella **nella posizione da cui lanci il
+comando** e vi esporta i driver di terze parti con `Export-WindowsDriver`
+(fallback: `pnputil`).
+
+```powershell
+# Sessione PowerShell avviata come amministratore
+cd D:\lavoro
+drvbackup
+# -> D:\lavoro\HP_EliteBook_840_G8\  con _info.txt e drivers.csv
+
+# Nome cartella scelto da te, archivio zip pronto da consegnare
+drvbackup -Name 'Cliente_Rossi_HP_G8' -Compress
+
+# Chiedi sempre conferma del nome rilevato
+drvbackup -Prompt
+
+# Anteprima senza esportare nulla
+drvbackup -WhatIf
+```
+
+Parametri:
+
+| Parametro | Descrizione |
+| --- | --- |
+| `-DestinationPath` | Cartella in cui creare la sottocartella (default: cartella corrente) |
+| `-Name` | Nome della cartella (default: produttore + modello) |
+| `-Prompt` | Chiede conferma del nome anche se il rilevamento riesce |
+| `-Compress` | Crea anche `<cartella>.zip` |
+
+Se il BIOS espone solo valori generici (`Default string`,
+`To be filled by O.E.M.`), il comando chiede il nome del PC e usa
+`$env:COMPUTERNAME` come proposta. La cartella contiene:
+
+- le sottocartelle dei driver (una per pacchetto, come le vuole `pnputil /add-driver`);
+- `drivers.csv` con classe, produttore, versione e data dei driver esportati;
+- `_info.txt` con PC, produttore, modello, seriale, data e dimensione dell'export.
+
+### Senza installare il modulo: `scripts/Export-Drivers.ps1`
+
+Copia il file `scripts/Export-Drivers.ps1` su una chiavetta e avvialo sul PC da
+assistere: se non ha i privilegi si riapre da solo come amministratore e, se il
+modulo `Toolbox` non e' presente, lo installa dal repository GitHub.
+
+```powershell
+# Da chiavetta USB (la prima volta sblocca il file se hai una execution policy restrittiva)
+Unblock-File .\Export-Drivers.ps1
+.\Export-Drivers.ps1 -Compress
+
+# Senza richiesta di elevazione (sessione gia' amministratore)
+.\Export-Drivers.ps1 -NoElevate -DestinationPath D:\backup
+```
+
+> L'export richiede Windows 8/Server 2012 o successivi (modulo DISM). Per
+> reinstallare i driver su un altro PC: `pnputil /add-driver <cartella>\*.inf /subdirs /install`.
+
+---
+
 ## Aggiungere un nuovo comando
 
 1. Crea il file `Toolbox/Public/Verbo-Nome.ps1` (usa `newps` come base, oppure
@@ -118,6 +181,7 @@ ps-toolbox/
 │  ├─ Toolbox.psm1          # loader: dot-source di Public e Private
 │  ├─ Private/              # funzioni interne (non esportate)
 │  └─ Public/               # un file per ogni comando esportato
+├─ scripts/Export-Drivers.ps1  # script autonomo per chiavetta USB
 ├─ tests/Toolbox.Tests.ps1  # test Pester
 ├─ install.ps1              # installer (locale / remoto / sessione)
 ├─ uninstall.ps1            # disinstallazione

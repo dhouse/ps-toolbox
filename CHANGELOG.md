@@ -4,6 +4,24 @@ Tutte le modifiche importanti di questo progetto sono annotate in questo file.
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il
 progetto usa [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.1.0] - 2026-11-05
+
+### Aggiunto
+- `Export-DriverPackage` (`drvbackup`): esporta i driver di terze parti del PC in
+  una cartella, con report `_info.txt` e `drivers.csv`; supporta `-Compress`,
+  `-Prompt`, `-Name`, `-DestinationPath` e `-WhatIf`.
+- `Get-ComputerModel` (`pcmodel`): legge produttore, modello e seriale dal BIOS e
+  propone un nome di cartella pulito (es. `HP_EliteBook_840_G8`).
+- `scripts/Export-Drivers.ps1`: script autonomo per chiavetta USB che si eleva da
+  solo e installa il modulo al primo avvio.
+- Funzioni private `ConvertTo-SafeFolderName`, `Test-GenericSystemValue`,
+  `Get-ShortManufacturer`, `Resolve-DriverFolderName`, `Test-IsAdministrator`.
+
+### Modificato
+- `ModuleVersion` portata a `1.1.0`.
+- I test importano il modulo a livello di file per rendere utilizzabile
+  `InModuleScope` anche in fase di discovery di Pester 6.
+
 ## [1.0.0] - 2026-11-05
 
 ### Aggiunto

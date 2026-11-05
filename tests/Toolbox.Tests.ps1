@@ -1,7 +1,16 @@
+$projectRoot = Split-Path -Path $PSScriptRoot -Parent
+$manifestPath = Join-Path -Path (Join-Path -Path $projectRoot -ChildPath 'Toolbox') -ChildPath 'Toolbox.psd1'
+
+# Import a livello di file (non solo in BeforeAll): Pester risolve il modulo
+# indicato da InModuleScope gia' durante la fase di discovery dei test.
+Import-Module -Name $manifestPath -Force
+
+$script:onWindows = $true
+if (Test-Path -LiteralPath 'Variable:\IsWindows') { $script:onWindows = [bool]$IsWindows }
+
 BeforeAll {
-    $projectRoot = Split-Path -Path $PSScriptRoot -Parent
-    $manifestPath = Join-Path -Path (Join-Path -Path $projectRoot -ChildPath 'Toolbox') -ChildPath 'Toolbox.psd1'
-    Import-Module -Name $manifestPath -Force
+    $moduleManifest = Join-Path -Path (Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'Toolbox') -ChildPath 'Toolbox.psd1'
+    Import-Module -Name $moduleManifest -Force
 }
 
 AfterAll {
@@ -17,6 +26,8 @@ Describe 'Toolbox: manifest e superficie pubblica' {
             'New-ScriptScaffold'
             'Invoke-ScriptLint'
             'Update-Toolbox'
+            'Get-ComputerModel'
+            'Export-DriverPackage'
         )
 
         foreach ($functionName in $expectedFunctions) {
@@ -25,7 +36,7 @@ Describe 'Toolbox: manifest e superficie pubblica' {
     }
 
     It 'esporta gli alias brevi' {
-        $expectedAliases = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds')
+        $expectedAliases = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds', 'pcmodel', 'drvbackup')
 
         foreach ($aliasName in $expectedAliases) {
             Get-Alias -Name $aliasName -ErrorAction Stop | Should -Not -BeNullOrEmpty
@@ -118,3 +129,127 @@ Describe 'Invoke-ScriptLint' {
         $results.Count | Should -Be 0
     }
 }
+
+Describe 'Funzioni private per il naming dei driver' {
+    InModuleScope Toolbox {
+        It 'genera un nome di cartella valido' {
+            ConvertTo-SafeFolderName -Text 'HP EliteBook 840 G8' | Should -Be 'HP_EliteBook_840_G8'
+        }
+
+        It 'sostituisce i caratteri non ammessi' {
+            ConvertTo-SafeFolderName -Text 'Dell Inc./XPS 15 "2024"' | Should -Be 'Dell_Inc_XPS_15_2024'
+        }
+
+        It 'restituisce stringa vuota per un testo vuoto' {
+            ConvertTo-SafeFolderName -Text '   ' | Should -Be ''
+        }
+
+        It 'riconosce i modelli generici del BIOS' {
+            Test-GenericSystemValue -Value 'To be filled by O.E.M.' | Should -BeTrue
+            Test-GenericSystemValue -Value 'Default string' | Should -BeTrue
+            Test-GenericSystemValue -Value 'EliteBook 840 G8' | Should -BeFalse
+        }
+
+        It 'accorcia i nomi commerciali dei produttori' {
+            Get-ShortManufacturer -Manufacturer 'Micro-Star International Co., Ltd.' | Should -Be 'MSI'
+            Get-ShortManufacturer -Manufacturer 'Hewlett-Packard Company' | Should -Be 'HP'
+        }
+
+        It 'usa PC come nome di fallback' {
+            $root = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('toolbox-naming-' + [guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory -Path $root -Force | Out-Null
+            try {
+                $leaf = Split-Path -Path (Resolve-DriverFolderName -DestinationPath $root -BaseName '  ') -Leaf
+                $leaf | Should -Be 'PC'
+            }
+            finally {
+                Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        It 'aggiunge data e ora se la cartella esiste gia' {
+            $root = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('toolbox-naming-' + [guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory -Path (Join-Path -Path $root -ChildPath 'PC') -Force | Out-Null
+            try {
+                $resolved = Resolve-DriverFolderName -DestinationPath $root -BaseName 'PC'
+                $resolved | Should -Not -Be (Join-Path -Path $root -ChildPath 'PC')
+                Split-Path -Path $resolved -Leaf | Should -Match '^PC_\d{8}_\d{6}'
+            }
+            finally {
+                Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+}
+
+Describe 'Get-ComputerModel' {
+    It 'restituisce i dati della macchina corrente' -Skip:(-not $script:onWindows) {
+        $model = Get-ComputerModel
+        $model.ComputerName | Should -Be ([Environment]::MachineName)
+        $model.SuggestedFolderName | Should -Not -BeNullOrEmpty
+        $model.PSObject.Properties.Name | Should -Contain 'IsGeneric'
+    }
+
+    It 'funziona solo su Windows' -Skip:$script:onWindows {
+        { Get-ComputerModel } | Should -Throw
+    }
+}
+
+Describe 'Export-DriverPackage' {
+    It 'non crea nulla con -WhatIf' -Skip:(-not $script:onWindows) {
+        $target = Join-Path -Path $TestDrive -ChildPath 'drivers'
+        New-Item -ItemType Directory -Path $target -Force | Out-Null
+
+        Export-DriverPackage -DestinationPath $target -Name 'PC-Test' -WhatIf
+
+        @(Get-ChildItem -LiteralPath $target -Force).Count | Should -Be 0
+    }
+
+    It 'funziona solo su Windows' -Skip:$script:onWindows {
+        { Export-DriverPackage -DestinationPath $TestDrive -Name 'PC-Test' -WhatIf } | Should -Throw
+    }
+}
+
+Describe 'Export-DriverPackage con export simulato' {
+    InModuleScope Toolbox {
+        $isWindowsHost = $true
+        if (Test-Path -LiteralPath 'Variable:\IsWindows') { $isWindowsHost = [bool]$IsWindows }
+
+        It 'crea cartella, report e csv dei driver' -Skip:(-not $isWindowsHost) {
+            Mock -CommandName 'Test-IsAdministrator' -MockWith { $true }
+            Mock -CommandName 'Export-WindowsDriver' -MockWith {
+                [pscustomobject]@{
+                    Driver           = 'C:\Windows\System32\DriverStore\FileRepository\fake.inf_amd64'
+                    OriginalFileName = 'fake.inf'
+                    ClassName        = 'Net'
+                    ProviderName     = 'Fake Provider'
+                    Version          = '1.0.0.0'
+                    Date             = '2026-11-05T00:00:00'
+                    Inbox            = $false
+                    BootCritical     = $false
+                }
+            }
+
+            $root = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ('toolbox-export-' + [guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory -Path $root -Force | Out-Null
+
+            try {
+                $result = Export-DriverPackage -DestinationPath $root -Name 'PC-Test'
+
+                $result.Folder | Should -Be (Join-Path -Path $root -ChildPath 'PC-Test')
+                $result.Method | Should -Be 'Export-WindowsDriver'
+                Test-Path -LiteralPath (Join-Path -Path $root -ChildPath 'PC-Test\_info.txt') | Should -BeTrue
+                Test-Path -LiteralPath (Join-Path -Path $root -ChildPath 'PC-Test\drivers.csv') | Should -BeTrue
+
+                $report = Get-Content -LiteralPath (Join-Path -Path $root -ChildPath 'PC-Test\_info.txt') -Raw
+                $report | Should -Match 'Toolbox - export driver'
+
+                Should -Invoke -CommandName 'Export-WindowsDriver' -Times 1 -Exactly
+            }
+            finally {
+                Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+}
+

@@ -1,6 +1,6 @@
 @{
     RootModule            = 'Toolbox.psm1'
-    ModuleVersion         = '1.0.0'
+    ModuleVersion         = '1.1.0'
     GUID                  = 'a4f1c9d2-6e3b-4c58-9a71-0d5b8f2c4e19'
     Author                = 'Il tuo nome'
     CompanyName           = 'Community'
@@ -16,11 +16,13 @@
         'New-ScriptScaffold'
         'Invoke-ScriptLint'
         'Update-Toolbox'
+        'Get-ComputerModel'
+        'Export-DriverPackage'
     )
 
     CmdletsToExport   = @()
     VariablesToExport = @()
-    AliasesToExport   = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds')
+    AliasesToExport   = @('sysinfo', 'hsh', 'portcheck', 'newps', 'lint', 'upds', 'pcmodel', 'drvbackup')
 
     PrivateData = @{
         PSData = @{
