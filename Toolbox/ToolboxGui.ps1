@@ -378,7 +378,6 @@ function New-ToolboxGuiButton {
     [CmdletBinding()]
     [OutputType([object])]
     [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '', Justification = 'Restituisce un pulsante WinForms, tipo non dichiarabile su Linux.')]
-
     param(
         [Parameter(Mandatory = $true, Position = 0)]
         [string] $Text,
@@ -455,9 +454,8 @@ function New-ToolboxGuiSmallButton {
         Crea un pulsante secondario della barra inferiore.
     #>
     [CmdletBinding()]
-    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '', Justification = 'Restituisce un pulsante WinForms, tipo non dichiarabile su Linux.')]
-
     [OutputType([object])]
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '', Justification = 'Restituisce un pulsante WinForms, tipo non dichiarabile su Linux.')]
     param(
         [Parameter(Mandatory = $true, Position = 0)]
         [string] $Text,
