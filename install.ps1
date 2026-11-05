@@ -26,13 +26,13 @@
 .EXAMPLE
     .\install.ps1
 .EXAMPLE
-    irm https://raw.githubusercontent.com/UTENTE/ps-toolbox/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/dhouse/ps-toolbox/main/install.ps1 | iex
 .EXAMPLE
     .\install.ps1 -Scope Session
 #>
 [CmdletBinding()]
 param(
-    [string] $Repository = 'YOUR_GITHUB_USER/ps-toolbox',
+    [string] $Repository = 'dhouse/ps-toolbox',
 
     [string] $Branch = 'main',
 

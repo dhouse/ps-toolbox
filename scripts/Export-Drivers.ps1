@@ -39,7 +39,7 @@ param(
 
     [switch] $Compress,
 
-    [string] $Repository = 'YOUR_GITHUB_USER/ps-toolbox',
+    [string] $Repository = 'dhouse/ps-toolbox',
 
     [string] $Branch = 'main',
 

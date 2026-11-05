@@ -16,10 +16,10 @@ PS C:\qualunque\cartella> hsh .\setup.exe
 
 ### 1. One-liner (consigliata, nessun git richiesto)
 
-Dopo aver pubblicato il repo su GitHub, sostituisci `UTENTE` con il tuo username:
+Un solo comando, nessun git richiesto:
 
 ```powershell
-irm https://raw.githubusercontent.com/UTENTE/ps-toolbox/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/dhouse/ps-toolbox/main/install.ps1 | iex
 ```
 
 Lo script scarica lo zip del branch `main`, sblocca i file (`Unblock-File`,
@@ -29,7 +29,7 @@ necessario con la execution policy `RemoteSigned`) e installa il modulo in
 ### 2. Da repository clonato
 
 ```powershell
-git clone https://github.com/UTENTE/ps-toolbox.git
+git clone https://github.com/dhouse/ps-toolbox.git
 cd ps-toolbox
 .\install.ps1
 ```
@@ -181,7 +181,9 @@ ps-toolbox/
 │  ├─ Toolbox.psm1          # loader: dot-source di Public e Private
 │  ├─ Private/              # funzioni interne (non esportate)
 │  └─ Public/               # un file per ogni comando esportato
-├─ scripts/Export-Drivers.ps1  # script autonomo per chiavetta USB
+├─ scripts/                     # script pronti all'uso e di manutenzione
+│  ├─ Export-Drivers.ps1        # esporta i driver, autonomo per chiavetta USB
+│  └─ Publish-Repo.ps1          # sostituisce i placeholder e pubblica su GitHub
 ├─ tests/Toolbox.Tests.ps1  # test Pester
 ├─ install.ps1              # installer (locale / remoto / sessione)
 ├─ uninstall.ps1            # disinstallazione
@@ -211,26 +213,31 @@ Oppure, dopo l'installazione del modulo: `lint` e `Invoke-Pester -Path .\tests`.
 
 ## Pubblicare su GitHub
 
+Crea su GitHub un repository **vuoto** (senza README ne' LICENSE), poi dalla
+cartella `scripts\`:
+
 ```powershell
-git init
-git add .
-git commit -m "feat: prima versione di ps-toolbox"
-git branch -M main
-git remote add origin https://github.com/UTENTE/ps-toolbox.git
-git push -u origin main
+.\Publish-Repo.ps1 -GitHubUser 'tuo-username' -AuthorName 'Nome Cognome' -AuthorEmail 'tua@email'
 ```
 
-Prima di pubblicare, sostituisci `YOUR_GITHUB_USER` con il tuo username in:
+Lo script:
 
-- `install.ps1` (parametro `$Repository`)
-- `Toolbox/Toolbox.psd1` (`ProjectUri` e `LicenseUri`)
-- `LICENSE` (nome del copyright)
+1. sostituisce i placeholder (`YOUR_GITHUB_USER`, `UTENTE`, `<IL TUO NOME>`) in
+   `install.ps1`, `Toolbox/Toolbox.psd1`, `LICENSE`, `README.md` e
+   `scripts/Export-Drivers.ps1`;
+2. imposta l'identita' git locale;
+3. committa le modifiche;
+4. configura il remote `origin` e fa il push.
+
+Il primo push apre la finestra di **Git Credential Manager**: l'autenticazione la
+fai tu su GitHub, lo script non legge ne' salva nessuna credenziale. Con
+`-SkipPush` esegue tutto tranne il push, con `-UseSsh` usa l'URL SSH.
 
 `Update-Toolbox` legge lo slug del repository da `ProjectUri`: se lo aggiorni
 qui, l'auto-aggiornamento funziona senza altre modifiche.
 
 Suggerimenti: aggiungi i *topics* `powershell`, `powershell-module`, `cli` al
-repo, e crea una *release* con tag `v1.0.0` per versionare.
+repo, e crea una *release* con tag `v1.1.0` per versionare.
 
 ---
 

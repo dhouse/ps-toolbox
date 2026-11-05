@@ -14,6 +14,9 @@ progetto usa [Semantic Versioning](https://semver.org/lang/it/).
   propone un nome di cartella pulito (es. `HP_EliteBook_840_G8`).
 - `scripts/Export-Drivers.ps1`: script autonomo per chiavetta USB che si eleva da
   solo e installa il modulo al primo avvio.
+- `scripts/Publish-Repo.ps1`: sostituisce i placeholder (`YOUR_GITHUB_USER`,
+  `UTENTE`, `<IL TUO NOME>`), imposta l'identita' git, committa e pubblica il
+  repository su GitHub (l'autenticazione passa da Git Credential Manager).
 - Funzioni private `ConvertTo-SafeFolderName`, `Test-GenericSystemValue`,
   `Get-ShortManufacturer`, `Resolve-DriverFolderName`, `Test-IsAdministrator`.
 
